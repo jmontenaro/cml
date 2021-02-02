@@ -151,7 +151,7 @@ spark.sql("show tables in default").show()
 # This is here to create the table in Hive used be the other parts of the project, if it
 # does not already exist.
 
-if ('telco_churn' not in list(spark.sql("show tables in default").toPandas()['tableName'])):
+if ('telco_churn_cml' not in list(spark.sql("show tables in default").toPandas()['tableName'])):
     print("creating the telco_churn database")
     telco_data\
         .write.format("parquet")\
