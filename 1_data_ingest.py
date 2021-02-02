@@ -157,14 +157,14 @@ if ('telco_churn' not in list(spark.sql("show tables in default").toPandas()['ta
         .write.format("parquet")\
         .mode("overwrite")\
         .saveAsTable(
-            'default.telco_churn'
+            'default.telco_churn_cml'
         )
 
 # Show the data in the hive table
-spark.sql("select * from default.telco_churn").show()
+spark.sql("select * from default.telco_churn_cml").show()
 
 # To get more detailed information about the hive table you can run this:
-spark.sql("describe formatted default.telco_churn").toPandas()
+spark.sql("describe formatted default.telco_churn_cml").toPandas()
 
 # Other ways to access data
 
@@ -186,4 +186,3 @@ spark.sql("describe formatted default.telco_churn").toPandas()
 # > script saves at: `/home/cdsw/job1/output.csv`.
 
 # Try running this script `1_data_ingest.py` for use in such a Job.
-
