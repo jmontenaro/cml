@@ -180,13 +180,6 @@ yaml_text = \
 with open('lineage.yml', 'w') as lineage:
     lineage.write(yaml_text)
 
-##########
-##########
-########## PART 5 #####
-##########
-##########
-
-
 # Create Model
 example_model_input = {"StreamingTV": "No", "MonthlyCharges": 70.35, "PhoneService": "No", "PaperlessBilling": "No", "Partner": "No", "OnlineBackup": "No", "gender": "Female", "Contract": "Month-to-month", "TotalCharges": 1397.475,
                        "StreamingMovies": "No", "DeviceProtection": "No", "PaymentMethod": "Bank transfer (automatic)", "tenure": 29, "Dependents": "No", "OnlineSecurity": "No", "MultipleLines": "No", "InternetService": "DSL", "SeniorCitizen": "No", "TechSupport": "No"}
@@ -235,7 +228,7 @@ while is_deployed == False:
 
 ##########
 ##########
-########## PART 6 ##### 
+########## PART 5 ##### 
 ########## Good time to take a break
 ##########
 
@@ -285,7 +278,7 @@ HTML("<a href='{}'>Open Application UI</a>".format(application_url))
 
 ##########
 ##########
-########## PART 7 #####
+########## PART 6 #####
 ##########
 ##########
 
