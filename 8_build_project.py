@@ -1,3 +1,10 @@
+
+##########
+##########
+########## PART 1 #####
+##########
+##########
+
 # Run this file to auto deploy the model, run a job, and deploy the application
 
 # Install the requirements
@@ -53,9 +60,21 @@ except:
 !hdfs dfs -mkdir -p $STORAGE/datalake/data/churn
 !hdfs dfs -copyFromLocal /home/cdsw/raw/WA_Fn-UseC_-Telco-Customer-Churn-.csv $STORAGE/datalake/data/churn/WA_Fn-UseC_-Telco-Customer-Churn-.csv
 
+##########
+##########
+########## PART 2 #####
+##########
+##########
+
 # This will run the data ingest file. You need this to create the hive table from the
 # csv file.
 exec(open("1_data_ingest.py").read())
+
+##########
+##########
+########## PART 3 #####
+##########
+##########
 
 # Get User Details
 user_details = cml.get_user({})
@@ -116,6 +135,12 @@ print("Job started")
 
 # Run experiment
 
+##########
+##########
+########## PART 4 #####
+##########
+##########
+
 run_experiment_params = {
     "size": {
         "id": 1,
@@ -154,6 +179,12 @@ yaml_text = \
 
 with open('lineage.yml', 'w') as lineage:
     lineage.write(yaml_text)
+
+##########
+##########
+########## PART 5 #####
+##########
+##########
 
 
 # Create Model
@@ -202,6 +233,12 @@ while is_deployed == False:
         print("Deploying Model.....")
         time.sleep(10)
 
+##########
+##########
+########## PART 6 ##### 
+########## Good time to take a break
+##########
+
 
 # Change the line in the flask/single_view.html file.
 subprocess.call(["sed", "-i",  's/const\saccessKey.*/const accessKey = "' +
@@ -245,6 +282,12 @@ while is_deployed == False:
         time.sleep(10)
 
 HTML("<a href='{}'>Open Application UI</a>".format(application_url))
+
+##########
+##########
+########## PART 7 #####
+##########
+##########
 
 # This will run the model operations section that makes calls to the model to track
 # mertics and track metric aggregations
