@@ -1,7 +1,6 @@
-
 ##########
 ##########
-########## PART 1 #####
+########## PART 1 - Environment Setup #####
 ##########
 ##########
 
@@ -38,31 +37,35 @@ PROJECT_NAME = os.getenv("CDSW_PROJECT")
 cml = CMLBootstrap(HOST, USERNAME, API_KEY, PROJECT_NAME)
 
 # Set the STORAGE environment variable
-try:
-    storage = os.environ["STORAGE"]
-except:
-    if os.path.exists("/etc/hadoop/conf/hive-site.xml"):
-        tree = ET.parse('/etc/hadoop/conf/hive-site.xml')
-        root = tree.getroot()
-        for prop in root.findall('property'):
-            if prop.find('name').text == "hive.metastore.warehouse.dir":
-                storage = prop.find('value').text.split(
-                    "/")[0] + "//" + prop.find('value').text.split("/")[2]
-    else:
-        storage = "/user/" + os.getenv("HADOOP_USER_NAME")
-    storage_environment_params = {"STORAGE": storage}
-    storage_environment = cml.create_environment_variable(
-        storage_environment_params)
-    os.environ["STORAGE"] = storage
+#try:
+#    storage = os.environ["STORAGE"]
+#except:
+#    if os.path.exists("/etc/hadoop/conf/hive-site.xml"):
+#        tree = ET.parse('/etc/hadoop/conf/hive-site.xml')
+#        root = tree.getroot()
+#        for prop in root.findall('property'):
+#            if prop.find('name').text == "hive.metastore.warehouse.dir":
+#                storage = prop.find('value').text.split(
+#                    "/")[0] + "//" + prop.find('value').text.split("/")[2]
+#    else:
+#        storage = "/user/" + os.getenv("HADOOP_USER_NAME")
+#    storage_environment_params = {"STORAGE": storage}
+#    storage_environment = cml.create_environment_variable(
+#        storage_environment_params)
+#    os.environ["STORAGE"] = storage
+
+storage = os.environ["STORAGE"]
+name_suffix = os.environ["NAME_SUFFIX"]
 
 !hdfs dfs -mkdir -p $STORAGE/datalake
 !hdfs dfs -mkdir -p $STORAGE/datalake/data
 !hdfs dfs -mkdir -p $STORAGE/datalake/data/churn
-!hdfs dfs -copyFromLocal /home/cdsw/raw/WA_Fn-UseC_-Telco-Customer-Churn-.csv $STORAGE/datalake/data/churn/WA_Fn-UseC_-Telco-Customer-Churn-.csv
+!hdfs dfs -mkdir -p $STORAGE/datalake/data/churn/$NAME_SUFFIX
+!hdfs dfs -copyFromLocal /home/cdsw/raw/WA_Fn-UseC_-Telco-Customer-Churn-.csv $STORAGE/datalake/data/churn/$NAME_SUFFIX/WA_Fn-UseC_-Telco-Customer-Churn-.csv
 
 ##########
 ##########
-########## PART 2 #####
+########## PART 2 - Data Ingestion #####
 ##########
 ##########
 
@@ -72,7 +75,7 @@ exec(open("1_data_ingest.py").read())
 
 ##########
 ##########
-########## PART 3 #####
+########## PART 3 - Training Job Creation #####
 ##########
 ##########
 
@@ -91,7 +94,7 @@ project_id = project_details["id"]
 
 
 # Create Job
-create_jobs_params = {"name": "Train Model " + run_time_suffix,
+create_jobs_params = {"name": "Train Model " + name_suffix + " " + run_time_suffix,
                       "type": "manual",
                       "script": "4_train_models.py",
                       "timezone": "America/Los_Angeles",
@@ -133,13 +136,13 @@ print("Job started")
 #job_dict = cml.start_job(job_id, start_job_params)
 #cml.stop_job(job_id, start_job_params)
 
-# Run experiment
+##########
+##########
+########## PART 4 - Model Deployment #####
+##########
+##########
 
-##########
-##########
-########## PART 4 #####
-##########
-##########
+# Run experiment
 
 run_experiment_params = {
     "size": {
@@ -180,13 +183,14 @@ yaml_text = \
 with open('lineage.yml', 'w') as lineage:
     lineage.write(yaml_text)
 
+
 # Create Model
-example_model_input = {"StreamingTV": "No", "MonthlyCharges": 70.35, "PhoneService": "No", "PaperlessBilling": "No", "Partner": "No", "OnlineBackup": "No", "gender": "Female", "Contract": "Month-to-month", "TotalCharges": 1397.475,
-                       "StreamingMovies": "No", "DeviceProtection": "No", "PaymentMethod": "Bank transfer (automatic)", "tenure": 29, "Dependents": "No", "OnlineSecurity": "No", "MultipleLines": "No", "InternetService": "DSL", "SeniorCitizen": "No", "TechSupport": "No"}
+example_model_input = {"TextAlerts": "No", "MonthlyCharges": 70.35, "SavingsAccount": "No", "PaperlessStatements": "No", "Partner": "No", "AccountTransfer": "No", "Gender": "Female", "Engagement": "Month-to-month", "TotalCharges": 1397.475,
+                       "Rewards": "No", "OnlineBillPay": "No", "PaymentMethod": "Bank transfer (automatic)", "Tenure": 29, "Dependents": "No", "OverdraftProtection": "No", "Multiple": "No", "VirtualWallet": "Virtual Wallet", "SeniorCitizen": "No", "EmailAlerts": "No"}
 
 create_model_params = {
     "projectId": project_id,
-    "name": "Model Explainer " + run_time_suffix,
+    "name": "Model Explainer " + name_suffix + " " + run_time_suffix,
     "description": "Explain a given model prediction",
     "visibility": "private",
     "enableAuth": False,
@@ -226,13 +230,6 @@ while is_deployed == False:
         print("Deploying Model.....")
         time.sleep(10)
 
-##########
-##########
-########## PART 5 ##### 
-########## Good time to take a break
-##########
-
-
 # Change the line in the flask/single_view.html file.
 subprocess.call(["sed", "-i",  's/const\saccessKey.*/const accessKey = "' +
                  access_key + '";/', "/home/cdsw/flask/single_view.html"])
@@ -243,10 +240,15 @@ subprocess.call(["sed", "-i",  's/model_id =.*/model_id = "' +
 subprocess.call(["sed", "-i",  's/model_id =.*/model_id = "' +
                  model_id + '"/', "/home/cdsw/7b_ml_ops_visual.py"])
 
+##########
+##########
+########## PART 5 - Application Deployment #####
+##########
+##########
 
 # Create Application
 create_application_params = {
-    "name": "Explainer App",
+    "name": "Explainer App " + name_suffix + " " + run_time_suffix,
     "subdomain": run_time_suffix[:],
     "description": "Explainer web application",
     "type": "manual",
@@ -278,11 +280,21 @@ HTML("<a href='{}'>Open Application UI</a>".format(application_url))
 
 ##########
 ##########
-########## PART 6 #####
+########## PART 6 - ML Ops Simulation #####
 ##########
 ##########
 
 # This will run the model operations section that makes calls to the model to track
-# mertics and track metric aggregations
+# metrics and metric aggregations
 
 exec(open("7a_ml_ops_simulation.py").read())
+
+##########
+##########
+########## PART 7 - ML Ops Visualization #####
+##########
+##########
+
+# This will visualize the tracked model metrics
+
+exec(open("7b_ml_ops_visual.py").read())
