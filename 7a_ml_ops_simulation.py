@@ -111,7 +111,7 @@ import copy
 # Get the model id from the model you deployed in step 5. These are unique to each 
 # model on CML.
 
-model_id = "2"
+model_id = "1"
 
 # Grab the data from Hive.
 from pyspark.sql import SparkSession
@@ -122,7 +122,7 @@ spark = SparkSession\
     .master("local[*]")\
     .getOrCreate()
 
-df = spark.sql("SELECT * FROM default.telco_churn_" + name_suffix).toPandas()
+df = spark.sql("SELECT * FROM default.telco_churn_cml_" + name_suffix).toPandas()
 
 # Get the various Model CRN details
 HOST = os.getenv("CDSW_API_URL").split(
@@ -170,7 +170,7 @@ for record in json.loads(df_sample_clean.to_json(orient='records')):
   print("Added {} records".format(percent_counter)) if (percent_counter%50 == 0) else None
   percent_counter += 1
   no_churn_record = copy.deepcopy(record)
-  no_churn_record.pop('CustomerID')
+  no_churn_record.pop('customerID')
   no_churn_record.pop('Churn')
   # **note** this is an easy way to interact with a model in a script
   response = cdsw.call_model(latest_model["accessKey"],no_churn_record)
