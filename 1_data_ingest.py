@@ -69,8 +69,6 @@ import sys
 from pyspark.sql import SparkSession
 from pyspark.sql.types import *
 
-
-
 spark = SparkSession\
     .builder\
     .appName("PythonSQL")\
@@ -118,10 +116,10 @@ schema = StructType(
 # Now we can read in the data from Cloud Storage into Spark...
 
 storage = os.environ['STORAGE']
+name_suffix = os.environ['NAME_SUFFIX']
 
 telco_data = spark.read.csv(
-    "file:/home/cdsw/raw/WA_Fn-UseC_-Telco-Customer-Churn-.csv".format(
-        storage),
+    "{}/datalake/data/churn/".format(storage)+name_suffix+"/WA_Fn-UseC_-Telco-Customer-Churn-.csv",
     header=True,
     schema=schema,
     sep=',',
@@ -151,20 +149,20 @@ spark.sql("show tables in default").show()
 # This is here to create the table in Hive used be the other parts of the project, if it
 # does not already exist.
 
-if ('telco_churn_cml' not in list(spark.sql("show tables in default").toPandas()['tableName'])):
-    print("creating the telco_churn database")
+if ('telco_churn_'+name_suffix not in list(spark.sql("show tables in default").toPandas()['tableName'])):
+    print("creating the telco_churn_"+name_suffix+" table")
     telco_data\
         .write.format("parquet")\
         .mode("overwrite")\
         .saveAsTable(
-            'default.telco_churn_cml'
+            'default.telco_churn_'+name_suffix
         )
 
 # Show the data in the hive table
-spark.sql("select * from default.telco_churn_cml").show()
+spark.sql("select * from default.telco_churn_"+name_suffix).show()
 
 # To get more detailed information about the hive table you can run this:
-spark.sql("describe formatted default.telco_churn_cml").toPandas()
+spark.sql("describe formatted default.telco_churn_"+name_suffix).toPandas()
 
 # Other ways to access data
 
