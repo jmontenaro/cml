@@ -109,8 +109,9 @@ from lime.lime_tabular import LimeTabularExplainer
 from churnexplainer import ExplainedModel, CategoricalEncoder
 
 data_dir = '/home/cdsw'
+name_suffix = os.environ['NAME_SUFFIX']
 
-idcol = 'customerID'
+idcol = 'CustomerID'
 labelcol = 'Churn'
 cols = (('gender', True),
         ('SeniorCitizen', True),
@@ -141,8 +142,8 @@ try:
         .master("local[*]")\
         .getOrCreate()
 
-    if (spark.sql("SELECT count(*) FROM default.telco_churn").collect()[0][0] > 0):
-        df = spark.sql("SELECT * FROM default.telco_churn").toPandas()
+    if (spark.sql("SELECT count(*) FROM default.telco_churn_"+name_suffix).collect()[0][0] > 0):
+        df = spark.sql("SELECT * FROM default.telco_churn_"+name_suffix).toPandas()
 except:
     print("Hive table has not been created")
     df = pd.read_csv(os.path.join(
